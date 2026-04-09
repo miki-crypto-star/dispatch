@@ -1,0 +1,1952 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>管理画面</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+
+  <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .topbar {
+      background: #111827;
+      color: #fff;
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .topbarInner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .titleBox h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .meta {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #d1d5db;
+      line-height: 1.6;
+    }
+
+    .topBtns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .topBtn {
+      width: auto;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .whiteBtn {
+      background: #fff;
+      color: #111827;
+    }
+
+    .redBtn {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 1000px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      padding: 16px;
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .label {
+      display: block;
+      margin: 12px 0 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      font-size: 16px;
+      border-radius: 10px;
+    }
+
+    input, select, textarea {
+      padding: 12px 14px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      padding: 13px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .subBtn {
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #111827;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .msg {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      min-height: 20px;
+    }
+
+    .ok { color: #059669; }
+    .err { color: #dc2626; }
+
+    .smallNote {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+
+    #map {
+      width: 100%;
+      height: 72vh;
+      min-height: 420px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #e5e7eb;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 680px) {
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .listWrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 420px;
+      overflow: auto;
+    }
+
+    .item {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .item.done {
+      opacity: 0.7;
+    }
+
+    .itemTitle {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+
+    .itemText {
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .itemBtns {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .miniBtn {
+      width: auto;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .focusBtn {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .doneBtn {
+      background: #059669;
+      color: #fff;
+    }
+
+    .backBtn {
+      background: #f59e0b;
+      color: #fff;
+    }
+
+    .deleteBtn {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    .empty {
+      padding: 24px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      border: 1px dashed #d1d5db;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .pinWrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transform: translate(-8px, -24px);
+      white-space: nowrap;
+    }
+
+    .pinDot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #111827;
+      box-shadow: 0 1px 3px rgba(0,0,0,.35);
+      flex: 0 0 auto;
+    }
+
+    .pinLabel {
+      background: rgba(255,255,255,.95);
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #111827;
+      box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    }
+
+    .leaflet-div-icon {
+      background: transparent;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbarInner">
+      <div class="titleBox">
+        <h1>配車管理画面</h1>
+        <div class="meta">
+          会社：<span id="companyNameText">-</span>
+          ／ コード：<span id="companyCodeText">-</span>
+          ／ 名前：<span id="userNameText">-</span>
+        </div>
+      </div>
+      <div class="topBtns">
+        <button id="categoriesBtn" class="topBtn whiteBtn" type="button">カテゴリ編集</button>
+        <button id="logoutBtn" class="topBtn redBtn" type="button">ログアウト</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="grid">
+      <div class="card">
+        <h2>配達先を登録</h2>
+
+        <label class="label" for="customerName">お客様名</label>
+        <input id="customerName" type="text" placeholder="例：山田商店" />
+
+        <label class="label" for="address">住所</label>
+        <input id="address" type="text" placeholder="例：埼玉県東松山市〇〇1-2-3" />
+
+        <div class="row2">
+          <div>
+            <label class="label" for="categorySelect">カテゴリ</label>
+            <select id="categorySelect">
+              <option value="">カテゴリを選択</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="statusSelect">状態</label>
+            <select id="statusSelect">
+              <option value="new">未対応</option>
+              <option value="done">完了</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="label" for="memo">メモ</label>
+        <textarea id="memo" placeholder="メモがあれば入力"></textarea>
+
+        <div class="row2" style="margin-top:14px;">
+          <button id="addBtn" class="btn" type="button">登録</button>
+          <button id="clearBtn" class="subBtn" type="button">入力クリア</button>
+        </div>
+
+        <div id="msg" class="msg"></div>
+        <div class="smallNote">
+          同じ住所は端末内に保存して再検索を減らしています。
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>地図</h2>
+        <div id="map"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="toolbar">
+        <input id="searchInput" type="text" placeholder="お客様名・住所で検索" />
+        <select id="filterCategory">
+          <option value="">全カテゴリ</option>
+        </select>
+      </div>
+
+      <h2>配達先一覧</h2>
+      <div id="deliveryList" class="listWrap"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      get,
+      push,
+      set,
+      update,
+      onValue,
+      remove
+    } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDeSlcwN5AnbpD-zCU05bCxVNp5n9oPKBg",
+      authDomain: "dispatch-453ca.firebaseapp.com",
+      databaseURL: "https://dispatch-453ca-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "dispatch-453ca",
+      storageBucket: "dispatch-453ca.firebasestorage.app",
+      messagingSenderId: "748642568165",
+      appId: "1:748642568165:web:6f73bbb5a80f0f4817910c",
+      measurementId: "G-PQ4QWLLX6T"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const companyCode = localStorage.getItem("companyCode") || "";
+    const userName = localStorage.getItem("userName") || "";
+    const role = localStorage.getItem("role") || "";
+    const savedPasscode = localStorage.getItem("passcode") || "";
+
+    if (!companyCode || !savedPasscode || role !== "admin") {
+      location.href = "login.html";
+    }
+
+    const companyNameText = document.getElementById("companyNameText");
+    const companyCodeText = document.getElementById("companyCodeText");
+    const userNameText = document.getElementById("userNameText");
+
+    const customerNameEl = document.getElementById("customerName");
+    const addressEl = document.getElementById("address");
+    const categorySelectEl = document.getElementById("categorySelect");
+    const statusSelectEl = document.getElementById("statusSelect");
+    const memoEl = document.getElementById("memo");
+
+    const addBtn = document.getElementById("addBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const categoriesBtn = document.getElementById("categoriesBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const msgEl = document.getElementById("msg");
+
+    const searchInputEl = document.getElementById("searchInput");
+    const filterCategoryEl = document.getElementById("filterCategory");
+    const deliveryListEl = document.getElementById("deliveryList");
+
+    companyCodeText.textContent = companyCode;
+    userNameText.textContent = userName || "-";
+
+    let companyName = "";
+    let categoriesMap = {};
+    let deliveriesMap = {};
+    let markers = [];
+    let map;
+    let lastGeocodeAt = 0;
+
+    function showMessage(text, type = "") {
+      msgEl.textContent = text;
+      msgEl.className = "msg";
+      if (type) msgEl.classList.add(type);
+    }
+
+    function logout() {
+      localStorage.removeItem("companyCode");
+      localStorage.removeItem("passcode");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("role");
+      location.href = "login.html";
+    }
+
+    function escapeHtml(str = "") {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getColorHex(colorName) {
+      const map = {
+        red: "#ef4444",
+        blue: "#3b82f6",
+        yellow: "#f59e0b",
+        green: "#10b981",
+        purple: "#8b5cf6",
+        orange: "#f97316"
+      };
+      return map[colorName] || "#ef4444";
+    }
+
+    function getBadgeStyle(colorName) {
+      return `background:${getColorHex(colorName)}22;`;
+    }
+
+    function clearForm() {
+      customerNameEl.value = "";
+      addressEl.value = "";
+      categorySelectEl.value = "";
+      statusSelectEl.value = "new";
+      memoEl.value = "";
+    }
+
+    function updateCategorySelects() {
+      const entries = Object.entries(categoriesMap).sort((a, b) => {
+        const sa = Number(a[1]?.sort ?? 9999);
+        const sb = Number(b[1]?.sort ?? 9999);
+        return sa - sb;
+      });
+
+      categorySelectEl.innerHTML = `<option value="">カテゴリを選択</option>`;
+      filterCategoryEl.innerHTML = `<option value="">全カテゴリ</option>`;
+
+      for (const [id, cat] of entries) {
+        const opt1 = document.createElement("option");
+        opt1.value = id;
+        opt1.textContent = cat.name || id;
+        categorySelectEl.appendChild(opt1);
+
+        const opt2 = document.createElement("option");
+        opt2.value = id;
+        opt2.textContent = cat.name || id;
+        filterCategoryEl.appendChild(opt2);
+      }
+    }
+
+    function createMarkerIcon(colorName, labelText) {
+      const html = `
+        <div class="pinWrap">
+          <div class="pinDot" style="background:${getColorHex(colorName)};"></div>
+          <div class="pinLabel">${escapeHtml(labelText || "")}</div>
+        </div>
+      `;
+      return L.divIcon({
+        className: "",
+        html,
+        iconSize: [140, 28],
+        iconAnchor: [10, 18]
+      });
+    }
+
+    function clearMarkers() {
+      for (const marker of markers) {
+        map.removeLayer(marker);
+      }
+      markers = [];
+    }
+
+    function getFilteredEntries() {
+      const keyword = (searchInputEl.value || "").trim().toLowerCase();
+      const filterCategory = filterCategoryEl.value || "";
+
+      return Object.entries(deliveriesMap)
+        .filter(([id, item]) => {
+          if (filterCategory && item.categoryId !== filterCategory) return false;
+          if (!keyword) return true;
+
+          const target = [
+            item.customerName || "",
+            item.address || "",
+            item.categoryName || "",
+            item.memo || ""
+          ].join(" ").toLowerCase();
+
+          return target.includes(keyword);
+        })
+        .sort((a, b) => Number(b[1]?.createdAt ?? 0) - Number(a[1]?.createdAt ?? 0));
+    }
+
+    function renderMap() {
+      if (!map) return;
+
+      clearMarkers();
+
+      const entries = getFilteredEntries();
+      if (entries.length === 0) return;
+
+      const bounds = [];
+
+      for (const [id, item] of entries) {
+        const lat = Number(item.lat);
+        const lng = Number(item.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+
+        const marker = L.marker([lat, lng], {
+          icon: createMarkerIcon(item.categoryColor || "red", item.customerName || "")
+        });
+
+        marker.bindPopup(`
+          <div style="min-width:220px;line-height:1.7;">
+            <div style="font-weight:800;font-size:15px;margin-bottom:6px;">${escapeHtml(item.customerName || "")}</div>
+            <div style="font-size:13px;">カテゴリ：${escapeHtml(item.categoryName || "")}</div>
+            <div style="font-size:13px;">住所：${escapeHtml(item.address || "")}</div>
+            <div style="font-size:13px;">状態：${item.status === "done" ? "完了" : "未対応"}</div>
+            <div style="font-size:13px;">メモ：${escapeHtml(item.memo || "")}</div>
+          </div>
+        `);
+
+        marker.addTo(map);
+        markers.push(marker);
+        bounds.push([lat, lng]);
+      }
+
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [30, 30] });
+      }
+    }
+
+    function focusDelivery(id) {
+      const item = deliveriesMap[id];
+      if (!item) return;
+
+      const lat = Number(item.lat);
+      const lng = Number(item.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      map.setView([lat, lng], 15);
+
+      const targetMarker = markers.find(m => {
+        const p = m.getLatLng();
+        return Math.abs(p.lat - lat) < 0.000001 && Math.abs(p.lng - lng) < 0.000001;
+      });
+
+      if (targetMarker) {
+        targetMarker.openPopup();
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function setDeliveryStatus(id, nextStatus) {
+      try {
+        await update(ref(db, `companies/${companyCode}/deliveries/${id}`), {
+          status: nextStatus
+        });
+        showMessage(nextStatus === "done" ? "完了にしました" : "未対応に戻しました", "ok");
+      } catch (error) {
+        console.error(error);
+        showMessage("状態更新に失敗しました", "err");
+      }
+    }
+
+    async function deleteDelivery(id) {
+      const item = deliveriesMap[id];
+      if (!item) return;
+
+      const ok = confirm(`削除しますか？\n${item.customerName || ""}`);
+      if (!ok) return;
+
+      try {
+        await remove(ref(db, `companies/${companyCode}/deliveries/${id}`));
+        showMessage("削除しました", "ok");
+      } catch (error) {
+        console.error(error);
+        showMessage("削除に失敗しました", "err");
+      }
+    }
+
+    function renderList() {
+      const entries = getFilteredEntries();
+
+      if (entries.length === 0) {
+        deliveryListEl.innerHTML = `<div class="empty">該当する配達先がありません</div>`;
+        return;
+      }
+
+      deliveryListEl.innerHTML = "";
+
+      for (const [id, item] of entries) {
+        const wrap = document.createElement("div");
+        wrap.className = item.status === "done" ? "item done" : "item";
+
+        wrap.innerHTML = `
+          <div class="itemTitle">${escapeHtml(item.customerName || "")}</div>
+          <div class="badge" style="${getBadgeStyle(item.categoryColor || "red")}">
+            ${escapeHtml(item.categoryName || "")}
+          </div>
+          <div class="itemText">住所：${escapeHtml(item.address || "")}</div>
+          <div class="itemText">状態：${item.status === "done" ? "完了" : "未対応"}</div>
+          <div class="itemText">メモ：${escapeHtml(item.memo || "")}</div>
+          <div class="itemBtns">
+            <button class="miniBtn focusBtn" data-focus="${id}">地図で見る</button>
+            ${
+              item.status === "done"
+                ? `<button class="miniBtn backBtn" data-back="${id}">未対応に戻す</button>`
+                : `<button class="miniBtn doneBtn" data-done="${id}">完了</button>`
+            }
+            <button class="miniBtn deleteBtn" data-delete="${id}">削除</button>
+          </div>
+        `;
+
+        deliveryListEl.appendChild(wrap);
+      }
+
+      deliveryListEl.querySelectorAll("[data-focus]").forEach(btn => {
+        btn.addEventListener("click", () => focusDelivery(btn.getAttribute("data-focus")));
+      });
+
+      deliveryListEl.querySelectorAll("[data-done]").forEach(btn => {
+        btn.addEventListener("click", () => setDeliveryStatus(btn.getAttribute("data-done"), "done"));
+      });
+
+      deliveryListEl.querySelectorAll("[data-back]").forEach(btn => {
+        btn.addEventListener("click", () => setDeliveryStatus(btn.getAttribute("data-back"), "new"));
+      });
+
+      deliveryListEl.querySelectorAll("[data-delete]").forEach(btn => {
+        btn.addEventListener("click", () => deleteDelivery(btn.getAttribute("data-delete")));
+      });
+    }
+
+    function saveGeocodeCache(address, value) {
+      const all = JSON.parse(localStorage.getItem("geoCache") || "{}");
+      all[address] = value;
+      localStorage.setItem("geoCache", JSON.stringify(all));
+    }
+
+    function readGeocodeCache(address) {
+      const all = JSON.parse(localStorage.getItem("geoCache") || "{}");
+      return all[address] || null;
+    }
+
+    function normalizeAddress(address) {
+      return String(address || "")
+        .trim()
+        .replaceAll("−", "-")
+        .replaceAll("ー", "-")
+        .replaceAll("―", "-")
+        .replaceAll("‐", "-")
+        .replaceAll("－", "-")
+        .replaceAll("　", " ")
+        .replace(/\s+/g, " ")
+        .replace(/^日本\s*/, "");
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function throttledFetch(url, options = {}) {
+      const now = Date.now();
+      const wait = Math.max(0, 1200 - (now - lastGeocodeAt));
+      if (wait > 0) {
+        await sleep(wait);
+      }
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          "Accept-Language": "ja",
+          ...options.headers
+        }
+      });
+      lastGeocodeAt = Date.now();
+      return res;
+    }
+
+    async function geocodeAddress(address) {
+      const normalized = normalizeAddress(address);
+      const cached = readGeocodeCache(normalized);
+
+      if (cached && Number.isFinite(Number(cached.lat)) && Number.isFinite(Number(cached.lng))) {
+        return {
+          lat: Number(cached.lat),
+          lng: Number(cached.lng)
+        };
+      }
+
+      const queries = [
+        `日本 ${normalized}`,
+        normalized,
+        normalized.replace(/\s+/g, ""),
+        `埼玉県 ${normalized}`
+      ];
+
+      let found = null;
+
+      for (const q of queries) {
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=jp&q=${encodeURIComponent(q)}`;
+        const res = await throttledFetch(url);
+
+        if (!res.ok) {
+          continue;
+        }
+
+        const data = await res.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          const lat = Number(data[0].lat);
+          const lng = Number(data[0].lon);
+
+          if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            found = { lat, lng };
+            break;
+          }
+        }
+      }
+
+      if (!found) {
+        throw new Error("住所が見つかりません");
+      }
+
+      saveGeocodeCache(normalized, found);
+      return found;
+    }
+
+    async function addDelivery() {
+      const customerName = customerNameEl.value.trim();
+      const address = addressEl.value.trim();
+      const categoryId = categorySelectEl.value;
+      const memo = memoEl.value.trim();
+      const status = statusSelectEl.value;
+
+      if (!customerName) {
+        showMessage("お客様名を入力してください", "err");
+        return;
+      }
+
+      if (!address) {
+        showMessage("住所を入力してください", "err");
+        return;
+      }
+
+      if (!categoryId) {
+        showMessage("カテゴリを選択してください", "err");
+        return;
+      }
+
+      const cat = categoriesMap[categoryId];
+      if (!cat) {
+        showMessage("カテゴリが見つかりません", "err");
+        return;
+      }
+
+      addBtn.disabled = true;
+      showMessage("住所から位置を確認中です...");
+
+      try {
+        const geo = await geocodeAddress(address);
+
+        const newRef = push(ref(db, `companies/${companyCode}/deliveries`));
+        await set(newRef, {
+          customerName,
+          address,
+          categoryId,
+          categoryName: cat.name || "",
+          lat: geo.lat,
+          lng: geo.lng,
+          status,
+          memo,
+          createdAt: Date.now(),
+          createdBy: userName || ""
+        });
+
+        showMessage("登録しました", "ok");
+        clearForm();
+    <!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>管理画面</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+
+  <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .topbar {
+      background: #111827;
+      color: #fff;
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .topbarInner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .titleBox h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .meta {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #d1d5db;
+      line-height: 1.6;
+    }
+
+    .topBtns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .topBtn {
+      width: auto;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .whiteBtn {
+      background: #fff;
+      color: #111827;
+    }
+
+    .redBtn {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 1000px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      padding: 16px;
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .label {
+      display: block;
+      margin: 12px 0 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      font-size: 16px;
+      border-radius: 10px;
+    }
+
+    input, select, textarea {
+      padding: 12px 14px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      padding: 13px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .subBtn {
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #111827;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .msg {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      min-height: 20px;
+    }
+
+    .ok { color: #059669; }
+    .err { color: #dc2626; }
+
+    .smallNote {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+
+    #map {
+      width: 100%;
+      height: 72vh;
+      min-height: 420px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #e5e7eb;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 680px) {
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .listWrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 420px;
+      overflow: auto;
+    }
+
+    .item {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .item.done {
+      opacity: 0.7;
+    }
+
+    .itemTitle {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+
+    .itemText {
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .itemBtns {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .miniBtn {
+      width: auto;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .focusBtn {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .doneBtn {
+      background: #059669;
+      color: #fff;
+    }
+
+    .backBtn {
+      background: #f59e0b;
+      color: #fff;
+    }
+
+    .deleteBtn {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    .empty {
+      padding: 24px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      border: 1px dashed #d1d5db;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .pinWrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transform: translate(-8px, -24px);
+      white-space: nowrap;
+    }
+
+    .pinDot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #111827;
+      box-shadow: 0 1px 3px rgba(0,0,0,.35);
+      flex: 0 0 auto;
+    }
+
+    .pinLabel {
+      background: rgba(255,255,255,.95);
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #111827;
+      box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    }
+
+    .leaflet-div-icon {
+      background: transparent;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbarInner">
+      <div class="titleBox">
+        <h1>配車管理画面</h1>
+        <div class="meta">
+          会社：<span id="companyNameText">-</span>
+          ／ コード：<span id="companyCodeText">-</span>
+          ／ 名前：<span id="userNameText">-</span>
+        </div>
+      </div>
+      <div class="topBtns">
+        <button id="categoriesBtn" class="topBtn whiteBtn" type="button">カテゴリ編集</button>
+        <button id="logoutBtn" class="topBtn redBtn" type="button">ログアウト</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="grid">
+      <div class="card">
+        <h2>配達先を登録</h2>
+
+        <label class="label" for="customerName">お客様名</label>
+        <input id="customerName" type="text" placeholder="例：山田商店" />
+
+        <label class="label" for="address">住所</label>
+        <input id="address" type="text" placeholder="例：埼玉県東松山市〇〇1-2-3" />
+
+        <div class="row2">
+          <div>
+            <label class="label" for="categorySelect">カテゴリ</label>
+            <select id="categorySelect">
+              <option value="">カテゴリを選択</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="statusSelect">状態</label>
+            <select id="statusSelect">
+              <option value="new">未対応</option>
+              <option value="done">完了</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="label" for="memo">メモ</label>
+        <textarea id="memo" placeholder="メモがあれば入力"></textarea>
+
+        <div class="row2" style="margin-top:14px;">
+          <button id="addBtn" class="btn" type="button">登録</button>
+          <button id="clearBtn" class="subBtn" type="button">入力クリア</button>
+        </div>
+
+        <div id="msg" class="msg"></div>
+        <div class="smallNote">
+          同じ住所は端末内に保存して再検索を減らしています。
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>地図</h2>
+        <div id="map"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="toolbar">
+        <input id="searchInput" type="text" placeholder="お客様名・住所で検索" />
+        <select id="filterCategory">
+          <option value="">全カテゴリ</option>
+        </select>
+      </div>
+
+      <h2>配達先一覧</h2>
+      <div id="deliveryList" class="listWrap"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      get,
+      push,
+      set,
+      update,
+      onValue,
+      remove
+    } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDeSlcwN5AnbpD-zCU05bCxVNp5n9oPKBg",
+      authDomain: "dispatch-453ca.firebaseapp.com",
+      databaseURL: "https://dispatch-453ca-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "dispatch-453ca",
+      storageBucket: "dispatch-453ca.firebasestorage.app",
+      messagingSenderId: "748642568165",
+      appId: "1:748642568165:web:6f73bbb5a80f0f4817910c",
+      measurementId: "G-PQ4QWLLX6T"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const companyCode = localStorage.getItem("companyCode") || "";
+    const userName = localStorage.getItem("userName") || "";
+    const role = localStorage.getItem("role") || "";
+    const savedPasscode = localStorage.getItem("passcode") || "";
+
+    if (!companyCode || !savedPasscode || role !== "admin") {
+      location.href = "login.html";
+    }
+
+    const companyNameText = document.getElementById("companyNameText");
+    const companyCodeText = document.getElementById("companyCodeText");
+    const userNameText = document.getElementById("userNameText");
+
+    const customerNameEl = document.getElementById("customerName");
+    const addressEl = document.getElementById("address");
+    const categorySelectEl = document.getElementById("categorySelect");
+    const statusSelectEl = document.getElementById("statusSelect");
+    const memoEl = document.getElementById("memo");
+
+    const addBtn = document.getElementById("addBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const categoriesBtn = document.getElementById("categoriesBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const msgEl = document.getElementById("msg");
+
+    const searchInputEl = document.getElementById("searchInput");
+    const filterCategoryEl = document.getElementById("filterCategory");
+    const deliveryListEl = document.getElementById("deliveryList");
+
+    companyCodeText.textContent = companyCode;
+    userNameText.textContent = userName || "-";
+
+    let companyName = "";
+    let categoriesMap = {};
+    let deliveriesMap = {};
+    let markers = [];
+    let map;
+    let lastGeocodeAt = 0;
+
+    function showMessage(text, type = "") {
+      msgEl.textContent = text;
+      msgEl.className = "msg";
+      if (type) msgEl.classList.add(type);
+    }
+
+    function logout() {
+      localStorage.removeItem("companyCode");
+      localStorage.removeItem("passcode");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("role");
+      location.href = "login.html";
+    }
+
+    function escapeHtml(str = "") {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getColorHex(colorName) {
+      const map = {
+        red: "#ef4444",
+        blue: "#3b82f6",
+        yellow: "#f59e0b",
+        green: "#10b981",
+        purple: "#8b5cf6",
+        orange: "#f97316"
+      };
+      return map[colorName] || "#ef4444";
+    }
+
+    function getBadgeStyle(colorName) {
+      return `background:${getColorHex(colorName)}22;`;
+    }
+
+    function clearForm() {
+      customerNameEl.value = "";
+      addressEl.value = "";
+      categorySelectEl.value = "";
+      statusSelectEl.value = "new";
+      memoEl.value = "";
+    }
+
+    function updateCategorySelects() {
+      const entries = Object.entries(categoriesMap).sort((a, b) => {
+        const sa = Number(a[1]?.sort ?? 9999);
+        const sb = Number(b[1]?.sort ?? 9999);
+        return sa - sb;
+      });
+
+      categorySelectEl.innerHTML = `<option value="">カテゴリを選択</option>`;
+      filterCategoryEl.innerHTML = `<option value="">全カテゴリ</option>`;
+
+      for (const [id, cat] of entries) {
+        const opt1 = document.createElement("option");
+        opt1.value = id;
+        opt1.textContent = cat.name || id;
+        categorySelectEl.appendChild(opt1);
+
+        const opt2 = document.createElement("option");
+        opt2.value = id;
+        opt2.textContent = cat.name || id;
+        filterCategoryEl.appendChild(opt2);
+      }
+    }
+
+    function createMarkerIcon(colorName, labelText) {
+      const html = `
+        <div class="pinWrap">
+          <div class="pinDot" style="background:${getColorHex(colorName)};"></div>
+          <div class="pinLabel">${escapeHtml(labelText || "")}</div>
+        </div>
+      `;
+      return L.divIcon({
+        className: "",
+        html,
+        iconSize: [140, 28],
+        iconAnchor: [10, 18]
+      });
+    }
+
+    function clearMarkers() {
+      for (const marker of markers) {
+        map.removeLayer(marker);
+      }
+      markers = [];
+    }
+
+    function getFilteredEntries() {
+      const keyword = (searchInputEl.value || "").trim().toLowerCase();
+      const filterCategory = filterCategoryEl.value || "";
+
+      return Object.entries(deliveriesMap)
+        .filter(([id, item]) => {
+          if (filterCategory && item.categoryId !== filterCategory) return false;
+          if (!keyword) return true;
+
+          const target = [
+            item.customerName || "",
+            item.address || "",
+            item.categoryName || "",
+            item.memo || ""
+          ].join(" ").toLowerCase();
+
+          return target.includes(keyword);
+        })
+        .sort((a, b) => Number(b[1]?.createdAt ?? 0) - Number(a[1]?.createdAt ?? 0));
+    }
+
+    function renderMap() {
+      if (!map) return;
+
+      clearMarkers();
+
+      const entries = getFilteredEntries();
+      if (entries.length === 0) return;
+
+      const bounds = [];
+
+      for (const [id, item] of entries) {
+        const lat = Number(item.lat);
+        const lng = Number(item.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+
+        const marker = L.marker([lat, lng], {
+          icon: createMarkerIcon(item.categoryColor || "red", item.customerName || "")
+        });
+
+        marker.bindPopup(`
+          <div style="min-width:220px;line-height:1.7;">
+            <div style="font-weight:800;font-size:15px;margin-bottom:6px;">${escapeHtml(item.customerName || "")}</div>
+            <div style="font-size:13px;">カテゴリ：${escapeHtml(item.categoryName || "")}</div>
+            <div style="font-size:13px;">住所：${escapeHtml(item.address || "")}</div>
+            <div style="font-size:13px;">状態：${item.status === "done" ? "完了" : "未対応"}</div>
+            <div style="font-size:13px;">メモ：${escapeHtml(item.memo || "")}</div>
+          </div>
+        `);
+
+        marker.addTo(map);
+        markers.push(marker);
+        bounds.push([lat, lng]);
+      }
+
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [30, 30] });
+      }
+    }
+
+    function focusDelivery(id) {
+      const item = deliveriesMap[id];
+      if (!item) return;
+
+      const lat = Number(item.lat);
+      const lng = Number(item.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      map.setView([lat, lng], 15);
+
+      const targetMarker = markers.find(m => {
+        const p = m.getLatLng();
+        return Math.abs(p.lat - lat) < 0.000001 && Math.abs(p.lng - lng) < 0.000001;
+      });
+
+      if (targetMarker) {
+        targetMarker.openPopup();
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function setDeliveryStatus(id, nextStatus) {
+      try {
+        await update(ref(db, `companies/${companyCode}/deliveries/${id}`), {
+          status: nextStatus
+        });
+        showMessage(nextStatus === "done" ? "完了にしました" : "未対応に戻しました", "ok");
+      } catch (error) {
+        console.error(error);
+        showMessage("状態更新に失敗しました", "err");
+      }
+    }
+
+    async function deleteDelivery(id) {
+      const item = deliveriesMap[id];
+      if (!item) return;
+
+      const ok = confirm(`削除しますか？\n${item.customerName || ""}`);
+      if (!ok) return;
+
+      try {
+        await remove(ref(db, `companies/${companyCode}/deliveries/${id}`));
+        showMessage("削除しました", "ok");
+      } catch (error) {
+        console.error(error);
+        showMessage("削除に失敗しました", "err");
+      }
+    }
+
+    function renderList() {
+      const entries = getFilteredEntries();
+
+      if (entries.length === 0) {
+        deliveryListEl.innerHTML = `<div class="empty">該当する配達先がありません</div>`;
+        return;
+      }
+
+      deliveryListEl.innerHTML = "";
+
+      for (const [id, item] of entries) {
+        const wrap = document.createElement("div");
+        wrap.className = item.status === "done" ? "item done" : "item";
+
+        wrap.innerHTML = `
+          <div class="itemTitle">${escapeHtml(item.customerName || "")}</div>
+          <div class="badge" style="${getBadgeStyle(item.categoryColor || "red")}">
+            ${escapeHtml(item.categoryName || "")}
+          </div>
+          <div class="itemText">住所：${escapeHtml(item.address || "")}</div>
+          <div class="itemText">状態：${item.status === "done" ? "完了" : "未対応"}</div>
+          <div class="itemText">メモ：${escapeHtml(item.memo || "")}</div>
+          <div class="itemBtns">
+            <button class="miniBtn focusBtn" data-focus="${id}">地図で見る</button>
+            ${
+              item.status === "done"
+                ? `<button class="miniBtn backBtn" data-back="${id}">未対応に戻す</button>`
+                : `<button class="miniBtn doneBtn" data-done="${id}">完了</button>`
+            }
+            <button class="miniBtn deleteBtn" data-delete="${id}">削除</button>
+          </div>
+        `;
+
+        deliveryListEl.appendChild(wrap);
+      }
+
+      deliveryListEl.querySelectorAll("[data-focus]").forEach(btn => {
+        btn.addEventListener("click", () => focusDelivery(btn.getAttribute("data-focus")));
+      });
+
+      deliveryListEl.querySelectorAll("[data-done]").forEach(btn => {
+        btn.addEventListener("click", () => setDeliveryStatus(btn.getAttribute("data-done"), "done"));
+      });
+
+      deliveryListEl.querySelectorAll("[data-back]").forEach(btn => {
+        btn.addEventListener("click", () => setDeliveryStatus(btn.getAttribute("data-back"), "new"));
+      });
+
+      deliveryListEl.querySelectorAll("[data-delete]").forEach(btn => {
+        btn.addEventListener("click", () => deleteDelivery(btn.getAttribute("data-delete")));
+      });
+    }
+
+    function saveGeocodeCache(address, value) {
+      const all = JSON.parse(localStorage.getItem("geoCache") || "{}");
+      all[address] = value;
+      localStorage.setItem("geoCache", JSON.stringify(all));
+    }
+
+    function readGeocodeCache(address) {
+      const all = JSON.parse(localStorage.getItem("geoCache") || "{}");
+      return all[address] || null;
+    }
+
+    function normalizeAddress(address) {
+      return String(address || "")
+        .trim()
+        .replaceAll("−", "-")
+        .replaceAll("ー", "-")
+        .replaceAll("―", "-")
+        .replaceAll("‐", "-")
+        .replaceAll("－", "-")
+        .replaceAll("　", " ")
+        .replace(/\s+/g, " ")
+        .replace(/^日本\s*/, "");
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function throttledFetch(url, options = {}) {
+      const now = Date.now();
+      const wait = Math.max(0, 1200 - (now - lastGeocodeAt));
+      if (wait > 0) {
+        await sleep(wait);
+      }
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          "Accept-Language": "ja",
+          ...options.headers
+        }
+      });
+      lastGeocodeAt = Date.now();
+      return res;
+    }
+
+    async function geocodeAddress(address) {
+      const normalized = normalizeAddress(address);
+      const cached = readGeocodeCache(normalized);
+
+      if (cached && Number.isFinite(Number(cached.lat)) && Number.isFinite(Number(cached.lng))) {
+        return {
+          lat: Number(cached.lat),
+          lng: Number(cached.lng)
+        };
+      }
+
+      const queries = [
+        `日本 ${normalized}`,
+        normalized,
+        normalized.replace(/\s+/g, ""),
+        `埼玉県 ${normalized}`
+      ];
+
+      let found = null;
+
+      for (const q of queries) {
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=jp&q=${encodeURIComponent(q)}`;
+        const res = await throttledFetch(url);
+
+        if (!res.ok) {
+          continue;
+        }
+
+        const data = await res.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          const lat = Number(data[0].lat);
+          const lng = Number(data[0].lon);
+
+          if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            found = { lat, lng };
+            break;
+          }
+        }
+      }
+
+      if (!found) {
+        throw new Error("住所が見つかりません");
+      }
+
+      saveGeocodeCache(normalized, found);
+      return found;
+    }
+
+    async function addDelivery() {
+      const customerName = customerNameEl.value.trim();
+      const address = addressEl.value.trim();
+      const categoryId = categorySelectEl.value;
+      const memo = memoEl.value.trim();
+      const status = statusSelectEl.value;
+
+      if (!customerName) {
+        showMessage("お客様名を入力してください", "err");
+        return;
+      }
+
+      if (!address) {
+        showMessage("住所を入力してください", "err");
+        return;
+      }
+
+      if (!categoryId) {
+        showMessage("カテゴリを選択してください", "err");
+        return;
+      }
+
+      const cat = categoriesMap[categoryId];
+      if (!cat) {
+        showMessage("カテゴリが見つかりません", "err");
+        return;
+      }
+
+      addBtn.disabled = true;
+      showMessage("住所から位置を確認中です...");
+
+      try {
+        const geo = await geocodeAddress(address);
+
+        const newRef = push(ref(db, `companies/${companyCode}/deliveries`));
+        await set(newRef, {
+          customerName,
+          address,
+          categoryId,
+          categoryName: cat.name || "",
+          lat: geo.lat,
+          lng: geo.lng,
+          status,
+          memo,
+          createdAt: Date.now(),
+          createdBy: userName || ""
+        });
+
+        showMessage("登録しました", "ok");
+        clearForm();
+      } catch (error) {
+        console.error(error);
+        showMessage("登録に失敗しました。住所を確認してください", "err");
+      } finally {
+        addBtn.disabled = false;
+      }
+    }
+
+    async function loadCompanyProfile() {
+      const snap = await get(ref(db, `companies/${companyCode}/profile`));
+      if (!snap.exists()) {
+        alert("会社情報が見つかりません");
+        logout();
+        return;
+      }
+
+      const profile = snap.val() || {};
+      companyName = profile.companyName || companyCode;
+      companyNameText.textContent = companyName;
+    }
+
+    function listenCategories() {
+      onValue(ref(db, `companies/${companyCode}/categories`), snap => {
+        categoriesMap = snap.val() || {};
+        updateCategorySelects();
+
+        for (const key of Object.keys(deliveriesMap)) {
+          const item = deliveriesMap[key];
+          const cat = categoriesMap[item.categoryId] || null;
+          deliveriesMap[key].categoryName = cat?.name || item.categoryName || "";
+          deliveriesMap[key].categoryColor = cat?.color || "red";
+        }
+
+        renderList();
+        renderMap();
+      });
+    }
+
+    function listenDeliveries() {
+      onValue(ref(db, `companies/${companyCode}/deliveries`), snap => {
+        const raw = snap.val() || {};
+        const next = {};
+
+        for (const [id, item] of Object.entries(raw)) {
+          const cat = categoriesMap[item.categoryId] || null;
+          next[id] = {
+            ...item,
+            categoryName: cat?.name || item.categoryName || "",
+            categoryColor: cat?.color || "red"
+          };
+        }
+
+        deliveriesMap = next;
+        renderList();
+        renderMap();
+      });
+    }
+
+    function initMap() {
+      map = L.map("map", {
+        zoomControl: true
+      }).setView([35.997, 139.397], 10);
+
+      L.maplibreGL({
+        style: "https://tiles.openfreemap.org/styles/liberty"
+      }).addTo(map);
+    }
+
+    addBtn.addEventListener("click", addDelivery);
+
+    clearBtn.addEventListener("click", () => {
+      clearForm();
+      showMessage("入力をクリアしました", "ok");
+    });
+
+    categoriesBtn.addEventListener("click", () => {
+      location.href = "categories.html";
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      const ok = confirm("ログアウトしますか？");
+      if (ok) logout();
+    });
+
+    searchInputEl.addEventListener("input", () => {
+      renderList();
+      renderMap();
+    });
+
+    filterCategoryEl.addEventListener("change", () => {
+      renderList();
+      renderMap();
+    });
+
+    async function start() {
+      initMap();
+      await loadCompanyProfile();
+      listenCategories();
+      listenDeliveries();
+    }
+
+    start();
+  </script>
+</body>
+</html>
+        addBtn.disabled = false;
+      }
+    }
+
+    async function loadCompanyProfile() {
+      const snap = await get(ref(db, `companies/${companyCode}/profile`));
+      if (!snap.exists()) {
+        alert("会社情報が見つかりません");
+        logout();
+        return;
+      }
+
+      const profile = snap.val() || {};
+      companyName = profile.companyName || companyCode;
+      companyNameText.textContent = companyName;
+    }
+
+    function listenCategories() {
+      onValue(ref(db, `companies/${companyCode}/categories`), snap => {
+        categoriesMap = snap.val() || {};
+        updateCategorySelects();
+
+        for (const key of Object.keys(deliveriesMap)) {
+          const item = deliveriesMap[key];
+          const cat = categoriesMap[item.categoryId] || null;
+          deliveriesMap[key].categoryName = cat?.name || item.categoryName || "";
+          deliveriesMap[key].categoryColor = cat?.color || "red";
+        }
+
+        renderList();
+        renderMap();
+      });
+    }
+
+    function listenDeliveries() {
+      onValue(ref(db, `companies/${companyCode}/deliveries`), snap => {
+        const raw = snap.val() || {};
+        const next = {};
+
+        for (const [id, item] of Object.entries(raw)) {
+          const cat = categoriesMap[item.categoryId] || null;
+          next[id] = {
+            ...item,
+            categoryName: cat?.name || item.categoryName || "",
+            categoryColor: cat?.color || "red"
+          };
+        }
+
+        deliveriesMap = next;
+        renderList();
+        renderMap();
+      });
+    }
+
+    function initMap() {
+      map = L.map("map", {
+        zoomControl: true
+      }).setView([35.997, 139.397], 10);
+
+      L.maplibreGL({
+        style: "https://tiles.openfreemap.org/styles/liberty"
+      }).addTo(map);
+    }
+
+    addBtn.addEventListener("click", addDelivery);
+
+    clearBtn.addEventListener("click", () => {
+      clearForm();
+      showMessage("入力をクリアしました", "ok");
+    });
+
+    categoriesBtn.addEventListener("click", () => {
+      location.href = "categories.html";
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      const ok = confirm("ログアウトしますか？");
+      if (ok) logout();
+    });
+
+    searchInputEl.addEventListener("input", () => {
+      renderList();
+      renderMap();
+    });
+
+    filterCategoryEl.addEventListener("change", () => {
+      renderList();
+      renderMap();
+    });
+
+    async function start() {
+      initMap();
+      await loadCompanyProfile();
+      listenCategories();
+      listenDeliveries();
+    }
+
+    start();
+  </script>
+</body>
+</html>
