@@ -13,6 +13,9 @@
 
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js"></script>
 
+  <!-- 日本住所向け無料ジオコーダ -->
+  <script src="https://cdn.geolonia.com/community-geocoder.js"></script>
+
   <style>
     * { box-sizing: border-box; }
 
@@ -355,7 +358,7 @@
         <input id="customerName" type="text" placeholder="例：山田商店" />
 
         <label class="label" for="address">住所</label>
-        <input id="address" type="text" placeholder="例：埼玉県東松山市〇〇1-2-3" />
+        <input id="address" type="text" placeholder="例：埼玉県東松山市若松町2-17-20" />
 
         <div class="row2">
           <div>
@@ -383,7 +386,7 @@
 
         <div id="msg" class="msg"></div>
         <div class="smallNote">
-          同じ住所は端末内に保存して再検索を減らしています。
+          日本住所向けの無料ジオコーダを使用しています。
         </div>
       </div>
 
@@ -469,7 +472,6 @@
     let deliveriesMap = {};
     let markers = [];
     let map;
-    let lastGeocodeAt = 0;
 
     function showMessage(text, type = "") {
       msgEl.textContent = text;
@@ -590,10 +592,7 @@
       clearMarkers();
 
       const entries = getFilteredEntries();
-
-      if (entries.length === 0) {
-        return;
-      }
+      if (entries.length === 0) return;
 
       const bounds = [];
 
@@ -750,81 +749,51 @@
         .replaceAll("―", "-")
         .replaceAll("‐", "-")
         .replaceAll("－", "-")
-        .replaceAll("　", " ")
-        .replace(/\s+/g, " ")
-        .replace(/^日本\s*/, "");
+        .replaceAll("　", "")
+        .replace(/\s+/g, "")
+        .replace(/^日本/, "");
     }
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    async function throttledFetch(url, options = {}) {
-      const now = Date.now();
-      const wait = Math.max(0, 1200 - (now - lastGeocodeAt));
-      if (wait > 0) {
-        await sleep(wait);
-      }
-
-      const res = await fetch(url, {
-        ...options,
-        headers: {
-          "Accept-Language": "ja",
-          ...options.headers
-        }
-      });
-
-      lastGeocodeAt = Date.now();
-      return res;
-    }
-
-    async function geocodeAddress(address) {
+    function geocodeAddress(address) {
       const normalized = normalizeAddress(address);
       const cached = readGeocodeCache(normalized);
 
       if (cached && Number.isFinite(Number(cached.lat)) && Number.isFinite(Number(cached.lng))) {
-        return {
+        return Promise.resolve({
           lat: Number(cached.lat),
           lng: Number(cached.lng)
-        };
+        });
       }
 
-      const queries = [
-        `日本 ${normalized}`,
-        normalized,
-        normalized.replace(/\s+/g, ""),
-        `埼玉県 ${normalized}`
-      ];
-
-      let found = null;
-
-      for (const q of queries) {
-        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=jp&q=${encodeURIComponent(q)}`;
-        const res = await throttledFetch(url);
-
-        if (!res.ok) {
-          continue;
+      return new Promise((resolve, reject) => {
+        if (typeof getLatLng !== "function") {
+          reject(new Error("住所変換ライブラリが読めていません"));
+          return;
         }
 
-        const data = await res.json();
+        getLatLng(normalized, (result) => {
+          try {
+            if (!result) {
+              reject(new Error("住所が見つかりません"));
+              return;
+            }
 
-        if (Array.isArray(data) && data.length > 0) {
-          const lat = Number(data[0].lat);
-          const lng = Number(data[0].lon);
+            const lat = Number(result.lat);
+            const lng = Number(result.lng);
 
-          if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            found = { lat, lng };
-            break;
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+              reject(new Error("住所が見つかりません"));
+              return;
+            }
+
+            const geo = { lat, lng };
+            saveGeocodeCache(normalized, geo);
+            resolve(geo);
+          } catch (error) {
+            reject(error);
           }
-        }
-      }
-
-      if (!found) {
-        throw new Error("住所が見つかりません");
-      }
-
-      saveGeocodeCache(normalized, found);
-      return found;
+        });
+      });
     }
 
     async function addDelivery() {
