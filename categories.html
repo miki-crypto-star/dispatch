@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>カテゴリ管理</title>
+  <style>
+    :root{
+      --bg:#f3f6fb;
+      --card:#ffffff;
+      --line:#d8e0ea;
+      --text:#1f2937;
+      --sub:#6b7280;
+      --blue:#2563eb;
+      --blue2:#1d4ed8;
+      --green:#16a34a;
+      --red:#dc2626;
+      --amber:#d97706;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .container{
+      max-width:1100px;
+      margin:0 auto;
+      padding:16px;
+    }
+    .topbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:16px;
+    }
+    .titlebox h1{
+      margin:0 0 6px;
+      font-size:26px;
+    }
+    .meta{
+      color:var(--sub);
+      font-size:14px;
+      line-height:1.6;
+    }
+    .meta strong{color:var(--text)}
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    button, input, select{
+      font:inherit;
+    }
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      cursor:pointer;
+      font-weight:700;
+      min-height:44px;
+    }
+    .btn-blue{background:var(--blue); color:#fff;}
+    .btn-blue:hover{background:var(--blue2);}
+    .btn-line{background:#fff; border:1px solid var(--line); color:var(--text);}
+    .btn-red{background:var(--red); color:#fff;}
+    .btn-green{background:var(--green); color:#fff;}
+    .btn-amber{background:var(--amber); color:#fff;}
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:16px;
+    }
+    .card h2{
+      margin:0 0 14px;
+      font-size:20px;
+    }
+    .status{
+      display:none;
+      padding:12px 14px;
+      border-radius:12px;
+      margin-bottom:16px;
+      font-size:14px;
+      line-height:1.6;
+    }
+    .status.show{display:block}
+    .status.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}
+    .status.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d}
+    .status.error{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c}
+    .grid-add{
+      display:grid;
+      grid-template-columns: 1.6fr .9fr auto;
+      gap:10px;
+      align-items:end;
+    }
+    .field label{
+      display:block;
+      margin-bottom:6px;
+      font-size:14px;
+      font-weight:700;
+    }
+    .field input{
+      width:100%;
+      min-height:44px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      background:#fff;
+    }
+    .field input:focus{
+      outline:none;
+      border-color:#93c5fd;
+      box-shadow:0 0 0 3px rgba(37,99,235,.12);
+    }
+    .preview{
+      width:100%;
+      height:44px;
+      border-radius:12px;
+      border:1px solid var(--line);
+    }
+    .table-wrap{
+      overflow:auto;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:860px;
+    }
+    th, td{
+      border-bottom:1px solid var(--line);
+      padding:10px 8px;
+      text-align:left;
+      vertical-align:middle;
+    }
+    th{
+      background:#f8fafc;
+      font-size:14px;
+    }
+    .sort-cell{
+      width:90px;
+      font-weight:700;
+    }
+    .name-input{
+      width:100%;
+      min-height:40px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:8px 10px;
+      background:#fff;
+    }
+    .color-input{
+      width:64px;
+      height:40px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:2px;
+      background:#fff;
+    }
+    .color-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+      color:var(--sub);
+    }
+    .chip-dot{
+      width:20px;
+      height:20px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.15);
+      display:inline-block;
+    }
+    .row-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .mini{
+      min-height:36px;
+      padding:8px 10px;
+      border-radius:10px;
+      font-size:13px;
+    }
+    .empty{
+      color:var(--sub);
+      padding:18px 6px;
+    }
+    .hint{
+      color:var(--sub);
+      font-size:13px;
+      line-height:1.6;
+      margin-top:8px;
+    }
+    @media (max-width:800px){
+      .grid-add{
+        grid-template-columns:1fr;
+      }
+      .topbar{
+        align-items:flex-start;
+      }
+      .actions{
+        width:100%;
+      }
+      .actions .btn{
+        flex:1 1 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="status" class="status"></div>
+
+    <div class="topbar">
+      <div class="titlebox">
+        <h1>カテゴリ管理</h1>
+        <div class="meta">
+          会社名: <strong id="companyName">-</strong><br>
+          ログイン中: <strong id="displayName">-</strong>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="backBtn" class="btn btn-line" type="button">adminへ戻る</button>
+        <button id="logoutBtn" class="btn btn-red" type="button">ログアウト</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>カテゴリ追加</h2>
+      <div class="grid-add">
+        <div class="field">
+          <label for="newCategoryName">カテゴリ名</label>
+          <input id="newCategoryName" type="text" placeholder="例: 午前便" />
+        </div>
+        <div class="field">
+          <label for="newCategoryColor">色</label>
+          <input id="newCategoryColor" type="color" value="#2563eb" />
+        </div>
+        <div>
+          <button id="addCategoryBtn" class="btn btn-blue" type="button">追加</button>
+        </div>
+      </div>
+      <div class="hint">
+        並び順は下の一覧で「上へ / 下へ」で変更できます。
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>カテゴリ一覧</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:90px;">順番</th>
+              <th>カテゴリ名</th>
+              <th style="width:160px;">色</th>
+              <th style="width:160px;">プレビュー</th>
+              <th style="width:320px;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="categoryTableBody">
+            <tr><td colspan="5" class="empty">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDeSlcwN5AnbpD-zCU05bCxVNp5n9oPKBg",
+      authDomain: "dispatch-453ca.firebaseapp.com",
+      databaseURL: "https://dispatch-453ca-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "dispatch-453ca",
+      storageBucket: "dispatch-453ca.firebasestorage.app",
+      messagingSenderId: "748642568165",
+      appId: "1:748642568165:web:6f73bbb5a80f0f4817910c",
+      measurementId: "G-PQ4QWLLX6T"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const LOGIN_KEY = "dispatchLogin";
+
+    const statusEl = document.getElementById("status");
+    const companyNameEl = document.getElementById("companyName");
+    const displayNameEl = document.getElementById("displayName");
+    const backBtn = document.getElementById("backBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const newCategoryNameEl = document.getElementById("newCategoryName");
+    const newCategoryColorEl = document.getElementById("newCategoryColor");
+    const addCategoryBtn = document.getElementById("addCategoryBtn");
+    const categoryTableBody = document.getElementById("categoryTableBody");
+
+    let login = null;
+    let companyCode = "";
+    let companyName = "";
+    let categoryList = [];
+    let categoriesRef = null;
+
+    function showStatus(message, type = "info") {
+      statusEl.className = "status show " + type;
+      statusEl.textContent = message;
+    }
+
+    function hideStatus() {
+      statusEl.className = "status";
+      statusEl.textContent = "";
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getLogin() {
+      try {
+        return JSON.parse(localStorage.getItem(LOGIN_KEY) || "null");
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem(LOGIN_KEY);
+      localStorage.removeItem("dispatchSelectedDeliveryId");
+      localStorage.removeItem("dispatchSelectedDeliveryLat");
+      localStorage.removeItem("dispatchSelectedDeliveryLng");
+      location.href = "login.html?logout=1";
+    }
+
+    function toSortedArray(obj) {
+      const arr = Object.entries(obj || {}).map(([id, value]) => ({
+        id,
+        name: value?.name || "",
+        color: value?.color || "#2563eb",
+        sort: Number(value?.sort || 0),
+        createdAt: Number(value?.createdAt || 0)
+      }));
+      arr.sort((a, b) => {
+        if (a.sort !== b.sort) return a.sort - b.sort;
+        return a.createdAt - b.createdAt;
+      });
+      return arr;
+    }
+
+    async function ensureProfile() {
+      const snap = await db.ref(`companies/${companyCode}/profile`).get();
+      if (!snap.exists()) {
+        throw new Error("会社プロフィールが見つかりません。");
+      }
+      const profile = snap.val() || {};
+      companyName = profile.companyName || companyCode;
+      companyNameEl.textContent = companyName;
+    }
+
+    async function ensureDefaultCategoriesIfEmpty() {
+      const ref = db.ref(`companies/${companyCode}/categories`);
+      const snap = await ref.get();
+      if (snap.exists()) return;
+
+      const now = Date.now();
+      await ref.set({
+        cat1: { name: "通常配達", color: "#2563eb", sort: 10, createdAt: now },
+        cat2: { name: "至急", color: "#dc2626", sort: 20, createdAt: now + 1 },
+        cat3: { name: "回収", color: "#16a34a", sort: 30, createdAt: now + 2 }
+      });
+    }
+
+    function renderCategories() {
+      if (!categoryList.length) {
+        categoryTableBody.innerHTML = `<tr><td colspan="5" class="empty">カテゴリがありません。</td></tr>`;
+        return;
+      }
+
+      categoryTableBody.innerHTML = categoryList.map((cat, index) => {
+        const isFirst = index === 0;
+        const isLast = index === categoryList.length - 1;
+        return `
+          <tr>
+            <td class="sort-cell">${escapeHtml(cat.sort)}</td>
+            <td>
+              <input
+                class="name-input"
+                id="name_${escapeHtml(cat.id)}"
+                type="text"
+                value="${escapeHtml(cat.name)}"
+                placeholder="カテゴリ名"
+              />
+            </td>
+            <td>
+              <input
+                class="color-input"
+                id="color_${escapeHtml(cat.id)}"
+                type="color"
+                value="${escapeHtml(cat.color)}"
+              />
+            </td>
+            <td>
+              <span class="color-chip">
+                <span class="chip-dot" style="background:${escapeHtml(cat.color)};"></span>
+                ${escapeHtml(cat.color)}
+              </span>
+            </td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn-green mini" type="button" onclick="saveCategory('${escapeHtml(cat.id)}')">保存</button>
+                <button class="btn btn-line mini" type="button" onclick="moveCategoryUp('${escapeHtml(cat.id)}')" ${isFirst ? "disabled" : ""}>上へ</button>
+                <button class="btn btn-line mini" type="button" onclick="moveCategoryDown('${escapeHtml(cat.id)}')" ${isLast ? "disabled" : ""}>下へ</button>
+                <button class="btn btn-red mini" type="button" onclick="deleteCategory('${escapeHtml(cat.id)}')">削除</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function addCategory() {
+      const name = newCategoryNameEl.value.trim();
+      const color = newCategoryColorEl.value || "#2563eb";
+
+      if (!name) {
+        showStatus("カテゴリ名を入力してください。", "error");
+        newCategoryNameEl.focus();
+        return;
+      }
+
+      try {
+        hideStatus();
+
+        let nextSort = 10;
+        if (categoryList.length) {
+          const maxSort = Math.max(...categoryList.map(x => Number(x.sort || 0)));
+          nextSort = maxSort + 10;
+        }
+
+        const newRef = db.ref(`companies/${companyCode}/categories`).push();
+        await newRef.set({
+          name,
+          color,
+          sort: nextSort,
+          createdAt: Date.now()
+        });
+
+        newCategoryNameEl.value = "";
+        newCategoryColorEl.value = "#2563eb";
+        showStatus("カテゴリを追加しました。", "ok");
+      } catch (err) {
+        console.error(err);
+        showStatus("カテゴリ追加に失敗しました。", "error");
+      }
+    }
+
+    async function saveCategory(categoryId) {
+      const nameEl = document.getElementById(`name_${categoryId}`);
+      const colorEl = document.getElementById(`color_${categoryId}`);
+      if (!nameEl || !colorEl) return;
+
+      const name = nameEl.value.trim();
+      const color = colorEl.value || "#2563eb";
+
+      if (!name) {
+        showStatus("カテゴリ名を空にはできません。", "error");
+        nameEl.focus();
+        return;
+      }
+
+      const current = categoryList.find(x => x.id === categoryId);
+      if (!current) return;
+
+      try {
+        await db.ref(`companies/${companyCode}/categories/${categoryId}`).update({
+          name,
+          color,
+          sort: current.sort
+        });
+        showStatus("カテゴリを保存しました。", "ok");
+      } catch (err) {
+        console.error(err);
+        showStatus("カテゴリ保存に失敗しました。", "error");
+      }
+    }
+
+    async function deleteCategory(categoryId) {
+      const target = categoryList.find(x => x.id === categoryId);
+      if (!target) return;
+
+      const ok = confirm(`「${target.name}」を削除しますか？`);
+      if (!ok) return;
+
+      try {
+        await db.ref(`companies/${companyCode}/categories/${categoryId}`).remove();
+        await normalizeSorts();
+        showStatus("カテゴリを削除しました。", "ok");
+      } catch (err) {
+        console.error(err);
+        showStatus("カテゴリ削除に失敗しました。", "error");
+      }
+    }
+
+    async function moveCategoryUp(categoryId) {
+      const index = categoryList.findIndex(x => x.id === categoryId);
+      if (index <= 0) return;
+      const prev = categoryList[index - 1];
+      const curr = categoryList[index];
+
+      try {
+        await Promise.all([
+          db.ref(`companies/${companyCode}/categories/${prev.id}/sort`).set(curr.sort),
+          db.ref(`companies/${companyCode}/categories/${curr.id}/sort`).set(prev.sort)
+        ]);
+        showStatus("並び順を変更しました。", "ok");
+      } catch (err) {
+        console.error(err);
+        showStatus("並び順変更に失敗しました。", "error");
+      }
+    }
+
+    async function moveCategoryDown(categoryId) {
+      const index = categoryList.findIndex(x => x.id === categoryId);
+      if (index < 0 || index >= categoryList.length - 1) return;
+      const curr = categoryList[index];
+      const next = categoryList[index + 1];
+
+      try {
+        await Promise.all([
+          db.ref(`companies/${companyCode}/categories/${curr.id}/sort`).set(next.sort),
+          db.ref(`companies/${companyCode}/categories/${next.id}/sort`).set(curr.sort)
+        ]);
+        showStatus("並び順を変更しました。", "ok");
+      } catch (err) {
+        console.error(err);
+        showStatus("並び順変更に失敗しました。", "error");
+      }
+    }
+
+    async function normalizeSorts() {
+      const updates = {};
+      let sort = 10;
+      for (const cat of categoryList) {
+        updates[`${cat.id}/sort`] = sort;
+        sort += 10;
+      }
+      if (Object.keys(updates).length) {
+        await db.ref(`companies/${companyCode}/categories`).update(updates);
+      }
+    }
+
+    async function init() {
+      try {
+        login = getLogin();
+
+        if (!login || !login.companyCode || !login.role) {
+          location.href = "login.html";
+          return;
+        }
+
+        if (login.role !== "admin") {
+          location.href = "driver.html";
+          return;
+        }
+
+        companyCode = String(login.companyCode || "").trim().toLowerCase();
+        displayNameEl.textContent = login.displayName ? login.displayName : "未設定";
+
+        if (!companyCode) {
+          location.href = "login.html";
+          return;
+        }
+
+        showStatus("読み込み中...", "info");
+
+        await ensureProfile();
+        await ensureDefaultCategoriesIfEmpty();
+
+        categoriesRef = db.ref(`companies/${companyCode}/categories`);
+        categoriesRef.on("value", (snap) => {
+          categoryList = toSortedArray(snap.val() || {});
+          renderCategories();
+          hideStatus();
+        }, (err) => {
+          console.error(err);
+          showStatus("カテゴリの読込に失敗しました。", "error");
+        });
+
+      } catch (err) {
+        console.error(err);
+        showStatus(err.message || "初期化に失敗しました。", "error");
+      }
+    }
+
+    addCategoryBtn.addEventListener("click", addCategory);
+
+    newCategoryNameEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addCategory();
+    });
+
+    backBtn.addEventListener("click", () => {
+      location.href = "admin.html";
+    });
+
+    logoutBtn.addEventListener("click", logout);
+
+    window.saveCategory = saveCategory;
+    window.deleteCategory = deleteCategory;
+    window.moveCategoryUp = moveCategoryUp;
+    window.moveCategoryDown = moveCategoryDown;
+
+    init();
+  </script>
+</body>
+</html>
