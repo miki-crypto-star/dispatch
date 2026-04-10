@@ -95,6 +95,7 @@
       margin-bottom:16px;
       font-size:14px;
       line-height:1.6;
+      white-space:pre-line;
     }
     .status.show{display:block}
     .status.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}
@@ -282,8 +283,8 @@
 
           <div class="field">
             <label for="address">住所</label>
-            <input id="address" type="text" placeholder="例: 埼玉県東松山市〇〇1-2-3" />
-            <div class="hint">住所入力 → Google Geocoder で座標取得して登録します。</div>
+            <input id="address" type="text" placeholder="例: 埼玉県鶴ヶ島市脚折町3-11-6" />
+            <div class="hint">入力住所とGoogle返却住所の市区町村が一致しない場合は登録しません。</div>
           </div>
 
           <div class="field">
@@ -638,6 +639,18 @@
       companyNameEl.textContent = companyName;
     }
 
+    function extractMunicipalityFromInput(address) {
+      const str = String(address || "").replace(/\s+/g, "");
+      const m = str.match(/(?:都|道|府|県)?([^0-9０-９\-－丁目番地号\s]+?(?:市|区|町|村))/);
+      return m ? m[1] : "";
+    }
+
+    function extractMunicipalityFromFormattedAddress(formattedAddress) {
+      const str = String(formattedAddress || "").replace(/\s+/g, "");
+      const m = str.match(/(?:都|道|府|県)?([^0-9０-９\-－丁目番地号\s]+?(?:市|区|町|村))/);
+      return m ? m[1] : "";
+    }
+
     function geocodeAddress(address) {
       return new Promise((resolve, reject) => {
         if (!window.google || !google.maps || !geocoder) {
@@ -659,15 +672,30 @@
 
             const best = results[0];
             const loc = best.geometry && best.geometry.location;
+            const formattedAddress = best.formatted_address || "";
 
             if (!loc) {
               reject(new Error("座標取得に失敗しました。"));
               return;
             }
 
+            const inputMunicipality = extractMunicipalityFromInput(address);
+            const resultMunicipality = extractMunicipalityFromFormattedAddress(formattedAddress);
+
+            if (inputMunicipality && resultMunicipality && inputMunicipality !== resultMunicipality) {
+              reject(new Error(
+                "市区町村が一致しないため登録しません。\n" +
+                `入力: ${inputMunicipality}\n` +
+                `Google結果: ${resultMunicipality}\n` +
+                `返却住所: ${formattedAddress}`
+              ));
+              return;
+            }
+
             resolve({
               lat: loc.lat(),
-              lng: loc.lng()
+              lng: loc.lng(),
+              formattedAddress
             });
           }
         );
