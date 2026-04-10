@@ -3,181 +3,202 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ログイン</title>
+  <title>配車WEBアプリ ログイン</title>
   <style>
-    * {
-      box-sizing: border-box;
+    :root{
+      --bg:#f3f6fb;
+      --card:#ffffff;
+      --line:#d8e0ea;
+      --text:#1f2937;
+      --sub:#6b7280;
+      --blue:#2563eb;
+      --blue2:#1d4ed8;
+      --red:#dc2626;
+      --green:#16a34a;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --radius:16px;
     }
-
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f3f4f6;
-      color: #111827;
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+      background:var(--bg);
+      color:var(--text);
     }
-
-    .wrap {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+    .wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
     }
-
-    .card {
-      width: 100%;
-      max-width: 420px;
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      padding: 22px;
+    .card{
+      width:100%;
+      max-width:520px;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:24px;
     }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: 24px;
-      text-align: center;
+    h1{
+      margin:0 0 8px;
+      font-size:26px;
+      line-height:1.3;
     }
-
-    .sub {
-      margin: 0 0 20px;
-      text-align: center;
-      color: #6b7280;
-      font-size: 14px;
+    .sub{
+      margin:0 0 20px;
+      color:var(--sub);
+      font-size:14px;
+      line-height:1.6;
     }
-
-    .label {
-      display: block;
-      margin: 14px 0 6px;
-      font-size: 14px;
-      font-weight: 700;
+    .status{
+      display:none;
+      margin:0 0 16px;
+      padding:12px 14px;
+      border-radius:12px;
+      font-size:14px;
+      line-height:1.6;
     }
-
-    input, button {
-      width: 100%;
-      font-size: 16px;
-      border-radius: 10px;
+    .status.show{display:block}
+    .status.info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+    .status.error{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+    .status.ok{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+    .field{margin-bottom:14px}
+    label{
+      display:block;
+      margin-bottom:6px;
+      font-size:14px;
+      font-weight:700;
     }
-
-    input {
-      padding: 12px 14px;
-      border: 1px solid #d1d5db;
-      background: #fff;
+    input,select,button{
+      width:100%;
+      min-height:46px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      padding:10px 12px;
+      font-size:16px;
+      background:#fff;
+      font-family:inherit;
     }
-
-    input:focus {
-      outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    input:focus,select:focus{
+      outline:none;
+      border-color:#93c5fd;
+      box-shadow:0 0 0 3px rgba(37,99,235,.12);
     }
-
-    .roleRow {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
+    .row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
     }
-
-    .roleBtn {
-      border: 1px solid #d1d5db;
-      background: #fff;
-      padding: 12px;
-      cursor: pointer;
-      font-weight: 700;
+    .actions{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+      margin-top:18px;
     }
-
-    .roleBtn.active {
-      border-color: #2563eb;
-      background: #eff6ff;
-      color: #1d4ed8;
+    .btn{
+      border:none;
+      cursor:pointer;
+      font-weight:700;
     }
-
-    .loginBtn {
-      margin-top: 18px;
-      border: none;
-      background: #2563eb;
-      color: #fff;
-      padding: 14px;
-      font-weight: 700;
-      cursor: pointer;
+    .btn-primary{
+      background:var(--blue);
+      color:#fff;
     }
-
-    .loginBtn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    .btn-primary:hover{background:var(--blue2)}
+    .btn-secondary{
+      background:#fff;
+      color:var(--text);
+      border:1px solid var(--line);
     }
-
-    .subBtn {
-      margin-top: 10px;
-      border: 1px solid #d1d5db;
-      background: #fff;
-      color: #111827;
-      padding: 12px;
-      font-weight: 700;
-      cursor: pointer;
+    .foot{
+      margin-top:16px;
+      font-size:13px;
+      color:var(--sub);
+      line-height:1.6;
     }
-
-    .msg {
-      margin-top: 14px;
-      font-size: 14px;
-      text-align: center;
-      min-height: 20px;
-      font-weight: 700;
+    .hint{
+      font-size:12px;
+      color:var(--sub);
+      margin-top:4px;
     }
-
-    .ok {
-      color: #059669;
+    .badge{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      background:#eef2ff;
+      color:#4338ca;
+      font-size:12px;
+      font-weight:700;
+      margin-bottom:8px;
     }
-
-    .err {
-      color: #dc2626;
+    .loading{
+      opacity:.7;
+      pointer-events:none;
     }
-
-    .note {
-      margin-top: 16px;
-      font-size: 12px;
-      color: #6b7280;
-      line-height: 1.6;
-      text-align: center;
+    @media (max-width:640px){
+      .row{grid-template-columns:1fr}
+      .card{padding:18px}
+      h1{font-size:22px}
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
+    <div class="card" id="card">
+      <div class="badge">配車WEBアプリ</div>
       <h1>ログイン</h1>
-      <p class="sub">会社コードとパスコードを入力してください</p>
+      <p class="sub">
+        会社コード・パスコード・役割でログインします。<br>
+        同一端末では次回から自動ログインします。
+      </p>
 
-      <label class="label" for="companyCode">会社コード</label>
-      <input id="companyCode" type="text" placeholder="例：saitamanishi" />
+      <div id="status" class="status"></div>
 
-      <label class="label" for="passcode">パスコード</label>
-      <input id="passcode" type="password" placeholder="配車係またはドライバーのパスコード" />
+      <form id="loginForm">
+        <div class="field">
+          <label for="companyCode">会社コード</label>
+          <input id="companyCode" type="text" placeholder="例: saitamanishi" autocomplete="organization" />
+        </div>
 
-      <label class="label" for="userName">名前（任意）</label>
-      <input id="userName" type="text" placeholder="例：岸澤" />
+        <div class="row">
+          <div class="field">
+            <label for="role">役割</label>
+            <select id="role">
+              <option value="admin">配車係</option>
+              <option value="driver">ドライバー</option>
+            </select>
+          </div>
 
-      <label class="label">役割</label>
-      <div class="roleRow">
-        <button type="button" id="adminRoleBtn" class="roleBtn active">配車係</button>
-        <button type="button" id="driverRoleBtn" class="roleBtn">ドライバー</button>
-      </div>
+          <div class="field">
+            <label for="passcode">パスコード</label>
+            <input id="passcode" type="password" placeholder="パスコード" autocomplete="current-password" />
+          </div>
+        </div>
 
-      <button id="loginBtn" class="loginBtn">ログイン</button>
-      <button id="clearBtn" class="subBtn" type="button">保存情報を消す</button>
+        <div class="field">
+          <label for="displayName">名前（任意）</label>
+          <input id="displayName" type="text" placeholder="例: 山田" autocomplete="name" />
+          <div class="hint">未入力でもログインできます。</div>
+        </div>
 
-      <div id="msg" class="msg"></div>
+        <div class="actions">
+          <button type="submit" class="btn btn-primary" id="loginBtn">ログイン</button>
+          <button type="button" class="btn btn-secondary" id="clearSavedBtn">保存済みログイン情報を削除</button>
+        </div>
+      </form>
 
-      <div class="note">
-        一度ログインすると、同じ端末では次回から自動で入ります
+      <div class="foot">
+        初期会社データ未作成時は、<br>
+        <strong>saitamanishi / 埼玉西営業所</strong> を自動作成します。
       </div>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDeSlcwN5AnbpD-zCU05bCxVNp5n9oPKBg",
       authDomain: "dispatch-453ca.firebaseapp.com",
@@ -189,42 +210,71 @@
       measurementId: "G-PQ4QWLLX6T"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
+    const LOGIN_KEY = "dispatchLogin";
+    const DEFAULT_COMPANY = {
+      companyCode: "saitamanishi",
+      companyName: "埼玉西営業所",
+      adminPasscode: "1111",
+      driverPasscode: "2222"
+    };
+
+    const card = document.getElementById("card");
+    const statusEl = document.getElementById("status");
+    const loginForm = document.getElementById("loginForm");
     const companyCodeEl = document.getElementById("companyCode");
+    const roleEl = document.getElementById("role");
     const passcodeEl = document.getElementById("passcode");
-    const userNameEl = document.getElementById("userName");
+    const displayNameEl = document.getElementById("displayName");
     const loginBtn = document.getElementById("loginBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const msgEl = document.getElementById("msg");
+    const clearSavedBtn = document.getElementById("clearSavedBtn");
 
-    const adminRoleBtn = document.getElementById("adminRoleBtn");
-    const driverRoleBtn = document.getElementById("driverRoleBtn");
+    function showStatus(message, type = "info") {
+      statusEl.className = "status show " + type;
+      statusEl.textContent = message;
+    }
 
-    let selectedRole = "admin";
+    function hideStatus() {
+      statusEl.className = "status";
+      statusEl.textContent = "";
+    }
 
-    adminRoleBtn.addEventListener("click", () => {
-      selectedRole = "admin";
-      adminRoleBtn.classList.add("active");
-      driverRoleBtn.classList.remove("active");
-    });
-
-    driverRoleBtn.addEventListener("click", () => {
-      selectedRole = "driver";
-      driverRoleBtn.classList.add("active");
-      adminRoleBtn.classList.remove("active");
-    });
-
-    function showMessage(text, type = "") {
-      msgEl.textContent = text;
-      msgEl.className = "msg";
-      if (type) {
-        msgEl.classList.add(type);
+    function setLoading(isLoading) {
+      if (isLoading) {
+        card.classList.add("loading");
+        loginBtn.textContent = "処理中...";
+      } else {
+        card.classList.remove("loading");
+        loginBtn.textContent = "ログイン";
       }
     }
 
-    function goNext(role) {
+    function normalizeCompanyCode(v) {
+      return String(v || "").trim().toLowerCase();
+    }
+
+    function getSavedLogin() {
+      try {
+        return JSON.parse(localStorage.getItem(LOGIN_KEY) || "null");
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function saveLogin(data) {
+      localStorage.setItem(LOGIN_KEY, JSON.stringify(data));
+    }
+
+    function clearSavedLogin() {
+      localStorage.removeItem(LOGIN_KEY);
+      localStorage.removeItem("dispatchSelectedDeliveryId");
+      localStorage.removeItem("dispatchSelectedDeliveryLat");
+      localStorage.removeItem("dispatchSelectedDeliveryLng");
+    }
+
+    function goByRole(role) {
       if (role === "admin") {
         location.href = "admin.html";
       } else {
@@ -232,112 +282,180 @@
       }
     }
 
-    function setRoleButtons(role) {
-      selectedRole = role;
-      if (role === "driver") {
-        driverRoleBtn.classList.add("active");
-        adminRoleBtn.classList.remove("active");
-      } else {
-        adminRoleBtn.classList.add("active");
-        driverRoleBtn.classList.remove("active");
+    async function getProfile(companyCode) {
+      const snap = await db.ref(`companies/${companyCode}/profile`).get();
+      return snap.exists() ? snap.val() : null;
+    }
+
+    async function ensureDefaultCompanyIfNeeded(companyCode) {
+      if (companyCode !== DEFAULT_COMPANY.companyCode) return;
+
+      const profileRef = db.ref(`companies/${companyCode}/profile`);
+      const profileSnap = await profileRef.get();
+
+      if (!profileSnap.exists()) {
+        await profileRef.set({
+          companyName: DEFAULT_COMPANY.companyName,
+          adminPasscode: DEFAULT_COMPANY.adminPasscode,
+          driverPasscode: DEFAULT_COMPANY.driverPasscode,
+          createdAt: Date.now()
+        });
+      }
+
+      const categoriesRef = db.ref(`companies/${companyCode}/categories`);
+      const categoriesSnap = await categoriesRef.get();
+
+      if (!categoriesSnap.exists()) {
+        const now = Date.now();
+        await categoriesRef.set({
+          cat1: { name: "通常配達", color: "#2563eb", sort: 10, createdAt: now },
+          cat2: { name: "至急", color: "#dc2626", sort: 20, createdAt: now + 1 },
+          cat3: { name: "回収", color: "#16a34a", sort: 30, createdAt: now + 2 }
+        });
       }
     }
 
-    async function tryLogin(companyCode, passcode, userName, role, autoMode = false) {
-      if (!companyCode || !passcode) {
-        if (!autoMode) {
-          showMessage("会社コードとパスコードを入力してください", "err");
+    async function tryAutoLogin() {
+      const saved = getSavedLogin();
+      if (!saved) return;
+
+      const companyCode = normalizeCompanyCode(saved.companyCode);
+      const role = saved.role === "admin" ? "admin" : (saved.role === "driver" ? "driver" : "");
+      const passcode = String(saved.passcode || "");
+      const displayName = String(saved.displayName || "");
+
+      if (!companyCode || !role || !passcode) return;
+
+      showStatus("保存済み情報を確認しています...", "info");
+      setLoading(true);
+
+      try {
+        await ensureDefaultCompanyIfNeeded(companyCode);
+        const profile = await getProfile(companyCode);
+
+        if (!profile) {
+          clearSavedLogin();
+          hideStatus();
+          setLoading(false);
+          return;
         }
+
+        const correctPasscode = role === "admin"
+          ? String(profile.adminPasscode || "")
+          : String(profile.driverPasscode || "");
+
+        if (passcode !== correctPasscode) {
+          clearSavedLogin();
+          showStatus("保存済みログイン情報が無効です。再入力してください。", "error");
+          setLoading(false);
+          return;
+        }
+
+        saveLogin({
+          companyCode,
+          companyName: String(profile.companyName || companyCode),
+          role,
+          passcode,
+          displayName,
+          loggedInAt: Date.now()
+        });
+
+        showStatus("自動ログインします...", "ok");
+        goByRole(role);
+      } catch (err) {
+        console.error(err);
+        showStatus("自動ログインに失敗しました。", "error");
+        setLoading(false);
+      }
+    }
+
+    (function init() {
+      const params = new URLSearchParams(location.search);
+
+      if (params.get("logout") === "1") {
+        showStatus("ログアウトしました。", "ok");
+      }
+
+      const saved = getSavedLogin();
+      if (saved) {
+        companyCodeEl.value = saved.companyCode || "";
+        roleEl.value = saved.role || "admin";
+        passcodeEl.value = saved.passcode || "";
+        displayNameEl.value = saved.displayName || "";
+      } else {
+        companyCodeEl.value = DEFAULT_COMPANY.companyCode;
+        roleEl.value = "admin";
+      }
+
+      tryAutoLogin();
+    })();
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideStatus();
+
+      const companyCode = normalizeCompanyCode(companyCodeEl.value);
+      const role = roleEl.value === "driver" ? "driver" : "admin";
+      const passcode = String(passcodeEl.value || "").trim();
+      const displayName = String(displayNameEl.value || "").trim();
+
+      if (!companyCode) {
+        showStatus("会社コードを入力してください。", "error");
+        companyCodeEl.focus();
+        return;
+      }
+      if (!passcode) {
+        showStatus("パスコードを入力してください。", "error");
+        passcodeEl.focus();
         return;
       }
 
-      loginBtn.disabled = true;
-
-      if (autoMode) {
-        showMessage("保存済み情報を確認中です...");
-      } else {
-        showMessage("確認中です...");
-      }
+      setLoading(true);
+      showStatus("ログイン確認中...", "info");
 
       try {
-        let passPath = "";
+        await ensureDefaultCompanyIfNeeded(companyCode);
+        const profile = await getProfile(companyCode);
 
-        if (role === "admin") {
-          passPath = `companies/${companyCode}/profile/adminPasscode`;
-        } else {
-          passPath = `companies/${companyCode}/profile/driverPasscode`;
-        }
-
-        const passRef = ref(db, passPath);
-        const snap = await get(passRef);
-
-        if (!snap.exists()) {
-          showMessage("会社コードまたはパスコード設定が見つかりません", "err");
-          loginBtn.disabled = false;
+        if (!profile) {
+          showStatus("会社コードが見つかりません。", "error");
+          setLoading(false);
           return;
         }
 
-        const savedPasscodeOnDb = String(snap.val() ?? "");
+        const correctPasscode = role === "admin"
+          ? String(profile.adminPasscode || "")
+          : String(profile.driverPasscode || "");
 
-        if (savedPasscodeOnDb !== passcode) {
-          showMessage("パスコードが違います", "err");
-          loginBtn.disabled = false;
+        if (passcode !== correctPasscode) {
+          showStatus(role === "admin" ? "配車係用パスコードが違います。" : "ドライバー用パスコードが違います。", "error");
+          setLoading(false);
           return;
         }
 
-        localStorage.setItem("companyCode", companyCode);
-        localStorage.setItem("passcode", passcode);
-        localStorage.setItem("userName", userName || "");
-        localStorage.setItem("role", role);
+        saveLogin({
+          companyCode,
+          companyName: String(profile.companyName || companyCode),
+          role,                // admin / driver で固定
+          passcode,
+          displayName,
+          loggedInAt: Date.now()
+        });
 
-        showMessage("ログイン成功。移動します...", "ok");
-
-        setTimeout(() => {
-          goNext(role);
-        }, 400);
-
-      } catch (error) {
-        console.error(error);
-        showMessage("接続エラーが発生しました", "err");
-        loginBtn.disabled = false;
+        showStatus("ログイン成功。画面を移動します...", "ok");
+        goByRole(role);
+      } catch (err) {
+        console.error(err);
+        showStatus("ログインに失敗しました。", "error");
+        setLoading(false);
       }
-    }
-
-    loginBtn.addEventListener("click", async () => {
-      const companyCode = companyCodeEl.value.trim();
-      const passcode = passcodeEl.value.trim();
-      const userName = userNameEl.value.trim();
-
-      await tryLogin(companyCode, passcode, userName, selectedRole, false);
     });
 
-    clearBtn.addEventListener("click", () => {
-      localStorage.removeItem("companyCode");
-      localStorage.removeItem("passcode");
-      localStorage.removeItem("userName");
-      localStorage.removeItem("role");
-
-      companyCodeEl.value = "";
+    clearSavedBtn.addEventListener("click", () => {
+      clearSavedLogin();
       passcodeEl.value = "";
-      userNameEl.value = "";
-      setRoleButtons("admin");
-      showMessage("保存情報を消しました", "ok");
-    });
-
-    window.addEventListener("load", async () => {
-      const savedCompanyCode = localStorage.getItem("companyCode") || "";
-      const savedPasscode = localStorage.getItem("passcode") || "";
-      const savedUserName = localStorage.getItem("userName") || "";
-      const savedRole = localStorage.getItem("role") || "admin";
-
-      companyCodeEl.value = savedCompanyCode;
-      passcodeEl.value = savedPasscode;
-      userNameEl.value = savedUserName;
-      setRoleButtons(savedRole);
-
-      if (savedCompanyCode && savedPasscode) {
-        await tryLogin(savedCompanyCode, savedPasscode, savedUserName, savedRole, true);
-      }
+      displayNameEl.value = "";
+      showStatus("保存済みログイン情報を削除しました。", "ok");
     });
   </script>
 </body>
