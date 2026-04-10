@@ -283,7 +283,7 @@
           <div class="field">
             <label for="address">住所</label>
             <input id="address" type="text" placeholder="例: 埼玉県東松山市〇〇1-2-3" />
-            <div class="hint">住所入力 → 自動で座標取得して登録します。</div>
+            <div class="hint">住所入力 → Google Geocoder で座標取得して登録します。</div>
           </div>
 
           <div class="field">
@@ -395,6 +395,7 @@
     let infoWindow = null;
     let markers = {};
     let mapReady = false;
+    let geocoder = null;
 
     function showStatus(message, type = "info") {
       statusEl.className = "status show " + type;
@@ -520,6 +521,7 @@
         fullscreenControl: true
       });
       infoWindow = new google.maps.InfoWindow();
+      geocoder = new google.maps.Geocoder();
       mapReady = true;
       renderMarkers();
     }
@@ -636,17 +638,40 @@
       companyNameEl.textContent = companyName;
     }
 
-    async function geocodeAddress(address) {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}`;
-      const res = await fetch(url);
-      const json = await res.json();
+    function geocodeAddress(address) {
+      return new Promise((resolve, reject) => {
+        if (!window.google || !google.maps || !geocoder) {
+          reject(new Error("Google Maps の住所変換が使えません。"));
+          return;
+        }
 
-      if (!json || json.status !== "OK" || !json.results || !json.results.length) {
-        throw new Error("住所から位置を取得できませんでした。住所を見直してください。");
-      }
+        geocoder.geocode(
+          {
+            address: address,
+            region: "JP",
+            componentRestrictions: { country: "JP" }
+          },
+          (results, status) => {
+            if (status !== "OK" || !results || !results.length) {
+              reject(new Error("住所から位置取得ができませんでした。住所を見直してください。"));
+              return;
+            }
 
-      const loc = json.results[0].geometry.location;
-      return { lat: Number(loc.lat), lng: Number(loc.lng) };
+            const best = results[0];
+            const loc = best.geometry && best.geometry.location;
+
+            if (!loc) {
+              reject(new Error("座標取得に失敗しました。"));
+              return;
+            }
+
+            resolve({
+              lat: loc.lat(),
+              lng: loc.lng()
+            });
+          }
+        );
+      });
     }
 
     async function saveDelivery() {
