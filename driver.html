@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ドライバー画面</title>
+  <style>
+    :root{
+      --bg:#f3f6fb;
+      --card:#ffffff;
+      --line:#d8e0ea;
+      --text:#1f2937;
+      --sub:#6b7280;
+      --blue:#2563eb;
+      --blue2:#1d4ed8;
+      --green:#16a34a;
+      --red:#dc2626;
+      --amber:#d97706;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .container{
+      max-width:1400px;
+      margin:0 auto;
+      padding:16px;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+    .titlebox h1{
+      margin:0 0 6px;
+      font-size:26px;
+    }
+    .meta{
+      color:var(--sub);
+      font-size:14px;
+      line-height:1.7;
+    }
+    .meta strong{color:var(--text)}
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      cursor:pointer;
+      font-weight:700;
+      min-height:44px;
+      font-size:14px;
+      font-family:inherit;
+    }
+    .btn-blue{background:var(--blue);color:#fff}
+    .btn-blue:hover{background:var(--blue2)}
+    .btn-line{background:#fff;border:1px solid var(--line);color:var(--text)}
+    .btn-red{background:var(--red);color:#fff}
+    .btn-green{background:var(--green);color:#fff}
+    .btn-amber{background:var(--amber);color:#fff}
+    .btn:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:16px;
+    }
+    .card h2{
+      margin:0 0 14px;
+      font-size:20px;
+    }
+    .status{
+      display:none;
+      padding:12px 14px;
+      border-radius:12px;
+      margin-bottom:16px;
+      font-size:14px;
+      line-height:1.6;
+    }
+    .status.show{display:block}
+    .status.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}
+    .status.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d}
+    .status.error{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c}
+    #map{
+      width:100%;
+      height:560px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:#e5e7eb;
+    }
+    .map-note{
+      margin-top:10px;
+      color:var(--sub);
+      font-size:13px;
+    }
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin:12px 0 0;
+    }
+    .legend-item{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:999px;
+      font-size:12px;
+    }
+    .legend-dot{
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.15);
+      display:inline-block;
+    }
+    .toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:12px;
+    }
+    .toolbar select{
+      min-height:40px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      padding:8px 10px;
+      background:#fff;
+      font:inherit;
+    }
+    .table-wrap{
+      overflow:auto;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:1080px;
+    }
+    th,td{
+      border-bottom:1px solid var(--line);
+      padding:10px 8px;
+      text-align:left;
+      vertical-align:top;
+      font-size:14px;
+    }
+    th{
+      background:#f8fafc;
+      font-size:13px;
+    }
+    .badge{
+      display:inline-block;
+      padding:5px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      color:#fff;
+      white-space:nowrap;
+    }
+    .badge-status-open{background:var(--amber)}
+    .badge-status-done{background:var(--green)}
+    .row-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .mini{
+      min-height:34px;
+      padding:8px 10px;
+      border-radius:10px;
+      font-size:12px;
+    }
+    .empty{
+      color:var(--sub);
+      padding:18px 6px;
+    }
+    .small{
+      color:var(--sub);
+      font-size:12px;
+      line-height:1.5;
+    }
+    @media (max-width:1100px){
+      #map{
+        height:420px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="status" class="status"></div>
+
+    <div class="topbar">
+      <div class="titlebox">
+        <h1>ドライバー画面</h1>
+        <div class="meta">
+          会社名: <strong id="companyName">-</strong><br>
+          ログイン中: <strong id="displayName">-</strong>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="logoutBtn" class="btn btn-red" type="button">ログアウト</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>地図</h2>
+      <div id="map"></div>
+      <div class="map-note">ピンをクリックすると詳細表示とナビ開始ができます。</div>
+      <div id="legend" class="legend"></div>
+    </div>
+
+    <div class="card">
+      <h2>一覧</h2>
+
+      <div class="toolbar">
+        <select id="statusFilter">
+          <option value="open">未対応のみ</option>
+          <option value="all">すべて</option>
+          <option value="done">完了のみ</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:110px;">状態</th>
+              <th style="width:140px;">カテゴリ</th>
+              <th style="width:180px;">お客様名</th>
+              <th>住所</th>
+              <th style="width:180px;">メモ</th>
+              <th style="width:160px;">登録情報</th>
+              <th style="width:300px;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="deliveryTableBody">
+            <tr><td colspan="7" class="empty">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDeSlcwN5AnbpD-zCU05bCxVNp5n9oPKBg",
+      authDomain: "dispatch-453ca.firebaseapp.com",
+      databaseURL: "https://dispatch-453ca-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "dispatch-453ca",
+      storageBucket: "dispatch-453ca.firebasestorage.app",
+      messagingSenderId: "748642568165",
+      appId: "1:748642568165:web:6f73bbb5a80f0f4817910c",
+      measurementId: "G-PQ4QWLLX6T"
+    };
+
+    const GOOGLE_MAPS_API_KEY = "AIzaSyBWvH-kaHFTpJRbTG8d1JxINuM7Fo0MpDQ";
+    const LOGIN_KEY = "dispatchLogin";
+    const DEFAULT_CENTER = { lat: 35.9896, lng: 139.3994 };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const statusEl = document.getElementById("status");
+    const companyNameEl = document.getElementById("companyName");
+    const displayNameEl = document.getElementById("displayName");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const legendEl = document.getElementById("legend");
+    const statusFilterEl = document.getElementById("statusFilter");
+    const deliveryTableBody = document.getElementById("deliveryTableBody");
+
+    let login = null;
+    let companyCode = "";
+    let companyName = "";
+    let categories = [];
+    let categoriesMap = {};
+    let deliveries = [];
+    let map = null;
+    let infoWindow = null;
+    let markers = {};
+    let mapReady = false;
+
+    function showStatus(message, type = "info") {
+      statusEl.className = "status show " + type;
+      statusEl.textContent = message;
+    }
+
+    function hideStatus() {
+      statusEl.className = "status";
+      statusEl.textContent = "";
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getLogin() {
+      try {
+        return JSON.parse(localStorage.getItem(LOGIN_KEY) || "null");
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem(LOGIN_KEY);
+      localStorage.removeItem("dispatchSelectedDeliveryId");
+      localStorage.removeItem("dispatchSelectedDeliveryLat");
+      localStorage.removeItem("dispatchSelectedDeliveryLng");
+      location.href = "login.html?logout=1";
+    }
+
+    function sortCategories(obj) {
+      return Object.entries(obj || {}).map(([id, value]) => ({
+        id,
+        name: value?.name || "",
+        color: value?.color || "#2563eb",
+        sort: Number(value?.sort || 0),
+        createdAt: Number(value?.createdAt || 0)
+      })).sort((a, b) => {
+        if (a.sort !== b.sort) return a.sort - b.sort;
+        return a.createdAt - b.createdAt;
+      });
+    }
+
+    function sortDeliveries(obj) {
+      return Object.entries(obj || {}).map(([id, value]) => ({
+        id,
+        customerName: value?.customerName || "",
+        address: value?.address || "",
+        categoryId: value?.categoryId || "",
+        categoryName: value?.categoryName || "",
+        lat: Number(value?.lat || 0),
+        lng: Number(value?.lng || 0),
+        status: value?.status || "open",
+        memo: value?.memo || "",
+        createdAt: Number(value?.createdAt || 0),
+        createdBy: value?.createdBy || ""
+      })).sort((a, b) => {
+        if (a.status !== b.status) {
+          if (a.status === "open") return -1;
+          if (b.status === "open") return 1;
+        }
+        return b.createdAt - a.createdAt;
+      });
+    }
+
+    function formatDateTime(ts) {
+      if (!ts) return "";
+      const d = new Date(ts);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      return `${y}/${m}/${day} ${hh}:${mm}`;
+    }
+
+    function buildLegend() {
+      if (!categories.length) {
+        legendEl.innerHTML = '<div class="small">カテゴリ未登録です。</div>';
+        return;
+      }
+      legendEl.innerHTML = categories.map(cat => `
+        <div class="legend-item">
+          <span class="legend-dot" style="background:${escapeHtml(cat.color)};"></span>
+          <span>${escapeHtml(cat.name)}</span>
+        </div>
+      `).join("");
+    }
+
+    function getPinSvg(color) {
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="52" viewBox="0 0 36 52">
+          <path d="M18 1C8.6 1 1 8.6 1 18c0 12.4 14.6 30.7 16.1 32.6.5.6 1.4.6 1.9 0C20.4 48.7 35 30.4 35 18 35 8.6 27.4 1 18 1z" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+          <circle cx="18" cy="18" r="6.5" fill="#ffffff"/>
+        </svg>
+      `;
+    }
+
+    function makeMarkerIcon(color) {
+      return {
+        url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(getPinSvg(color || "#2563eb")),
+        scaledSize: new google.maps.Size(36, 52),
+        anchor: new google.maps.Point(18, 52)
+      };
+    }
+
+    function startNavigationByAddress(address) {
+      if (!address) {
+        showStatus("住所がありません。", "error");
+        return;
+      }
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=driving`;
+      window.open(url, "_blank");
+    }
+
+    function buildInfoContent(item) {
+      return `
+        <div style="min-width:240px;line-height:1.6;">
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px;">${escapeHtml(item.customerName || "名称なし")}</div>
+          <div><strong>カテゴリ:</strong> ${escapeHtml(item.categoryName || "-")}</div>
+          <div><strong>状態:</strong> ${escapeHtml(item.status === "done" ? "完了" : "未対応")}</div>
+          <div><strong>住所:</strong> ${escapeHtml(item.address || "-")}</div>
+          <div><strong>メモ:</strong> ${escapeHtml(item.memo || "-")}</div>
+          <div style="margin-top:10px;">
+            <button
+              type="button"
+              style="border:none;background:#2563eb;color:#fff;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;"
+              onclick="startNavFromPopup('${escapeHtml(item.id)}')"
+            >Googleナビ開始</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: DEFAULT_CENTER,
+        zoom: 10,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true
+      });
+      infoWindow = new google.maps.InfoWindow();
+      mapReady = true;
+      renderMarkers();
+    }
+
+    function clearMarkers() {
+      Object.values(markers).forEach(marker => marker.setMap(null));
+      markers = {};
+    }
+
+    function getFilteredDeliveries() {
+      const filter = statusFilterEl.value;
+      if (filter === "all") return deliveries;
+      return deliveries.filter(x => x.status === filter);
+    }
+
+    function renderMarkers() {
+      if (!mapReady || !map) return;
+
+      clearMarkers();
+
+      const list = getFilteredDeliveries().filter(x => x.lat && x.lng);
+
+      list.forEach(item => {
+        const cat = categoriesMap[item.categoryId] || {};
+        const color = cat.color || "#2563eb";
+
+        const marker = new google.maps.Marker({
+          position: { lat: item.lat, lng: item.lng },
+          map,
+          title: item.customerName || item.address,
+          icon: makeMarkerIcon(color)
+        });
+
+        marker.addListener("click", () => {
+          infoWindow.setContent(buildInfoContent(item));
+          infoWindow.open(map, marker);
+        });
+
+        markers[item.id] = marker;
+      });
+    }
+
+    function focusDelivery(id) {
+      const item = deliveries.find(x => x.id === id);
+      if (!item || !item.lat || !item.lng || !mapReady) return;
+      map.panTo({ lat: item.lat, lng: item.lng });
+      map.setZoom(15);
+      if (markers[id]) {
+        google.maps.event.trigger(markers[id], "click");
+      }
+    }
+
+    function renderTable() {
+      const list = getFilteredDeliveries();
+
+      if (!list.length) {
+        deliveryTableBody.innerHTML = '<tr><td colspan="7" class="empty">データがありません。</td></tr>';
+        renderMarkers();
+        return;
+      }
+
+      deliveryTableBody.innerHTML = list.map(item => {
+        const cat = categoriesMap[item.categoryId] || {};
+        const color = cat.color || "#2563eb";
+        return `
+          <tr>
+            <td>
+              <span class="badge ${item.status === "done" ? "badge-status-done" : "badge-status-open"}">
+                ${item.status === "done" ? "完了" : "未対応"}
+              </span>
+            </td>
+            <td>
+              <span class="badge" style="background:${escapeHtml(color)};">${escapeHtml(item.categoryName || "-")}</span>
+            </td>
+            <td>${escapeHtml(item.customerName || "-")}</td>
+            <td>${escapeHtml(item.address || "-")}</td>
+            <td>${escapeHtml(item.memo || "-")}</td>
+            <td class="small">
+              ${escapeHtml(item.createdBy || "-")}<br>
+              ${escapeHtml(formatDateTime(item.createdAt))}
+            </td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn-line mini" type="button" onclick="focusDeliveryById('${escapeHtml(item.id)}')">地図で見る</button>
+                <button class="btn btn-blue mini" type="button" onclick="startNavById('${escapeHtml(item.id)}')">ナビ開始</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      renderMarkers();
+    }
+
+    async function ensureProfile() {
+      const snap = await db.ref(`companies/${companyCode}/profile`).get();
+      if (!snap.exists()) {
+        throw new Error("会社プロフィールが見つかりません。");
+      }
+      const profile = snap.val() || {};
+      companyName = profile.companyName || companyCode;
+      companyNameEl.textContent = companyName;
+    }
+
+    async function loadGoogleMapsScript() {
+      return new Promise((resolve, reject) => {
+        if (window.google && window.google.maps) {
+          resolve();
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&language=ja&region=JP&callback=__initDriverMap`;
+        script.async = true;
+        script.defer = true;
+        window.__initDriverMap = () => resolve();
+        script.onerror = () => reject(new Error("Google Maps の読込に失敗しました。APIキーを確認してください。"));
+        document.head.appendChild(script);
+      });
+    }
+
+    async function init() {
+      try {
+        login = getLogin();
+
+        if (!login || !login.companyCode || !login.role) {
+          location.href = "login.html";
+          return;
+        }
+        if (login.role !== "driver") {
+          location.href = "admin.html";
+          return;
+        }
+
+        companyCode = String(login.companyCode || "").trim().toLowerCase();
+        displayNameEl.textContent = login.displayName ? login.displayName : "未設定";
+
+        await ensureProfile();
+
+        showStatus("Google Maps を読み込み中...", "info");
+        await loadGoogleMapsScript();
+        initMap();
+
+        db.ref(`companies/${companyCode}/categories`).on("value", snap => {
+          categories = sortCategories(snap.val() || {});
+          categoriesMap = {};
+          categories.forEach(cat => { categoriesMap[cat.id] = cat; });
+          buildLegend();
+          renderTable();
+        }, err => {
+          console.error(err);
+          showStatus("カテゴリ読込に失敗しました。", "error");
+        });
+
+        db.ref(`companies/${companyCode}/deliveries`).on("value", snap => {
+          deliveries = sortDeliveries(snap.val() || {});
+          renderTable();
+          hideStatus();
+
+          const selectedId = localStorage.getItem("dispatchSelectedDeliveryId");
+          if (selectedId) {
+            setTimeout(() => focusDelivery(selectedId), 300);
+            localStorage.removeItem("dispatchSelectedDeliveryId");
+          }
+        }, err => {
+          console.error(err);
+          showStatus("配達先読込に失敗しました。", "error");
+        });
+
+      } catch (err) {
+        console.error(err);
+        showStatus(err.message || "初期化に失敗しました。", "error");
+      }
+    }
+
+    function startNavById(id) {
+      const item = deliveries.find(x => x.id === id);
+      if (!item) {
+        showStatus("対象データが見つかりません。", "error");
+        return;
+      }
+      startNavigationByAddress(item.address);
+    }
+
+    function startNavFromPopup(id) {
+      startNavById(id);
+    }
+
+    logoutBtn.addEventListener("click", logout);
+    statusFilterEl.addEventListener("change", renderTable);
+
+    window.focusDeliveryById = focusDelivery;
+    window.startNavById = startNavById;
+    window.startNavFromPopup = startNavFromPopup;
+
+    init();
+  </script>
+</body>
+</html>
