@@ -8,11 +8,6 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-  <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
-  <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
-
-  <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js"></script>
-
   <!-- 日本住所向け無料ジオコーダ -->
   <script src="https://cdn.geolonia.com/community-geocoder.js"></script>
 
@@ -386,7 +381,7 @@
 
         <div id="msg" class="msg"></div>
         <div class="smallNote">
-          日本住所向けの無料ジオコーダを使用しています。
+          背景地図は国土地理院タイル、住所変換は日本住所向け無料ジオコーダです。
         </div>
       </div>
 
@@ -635,7 +630,7 @@
 
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
-      map.setView([lat, lng], 15);
+      map.setView([lat, lng], 16);
 
       const targetMarker = markers.find(m => {
         const p = m.getLatLng();
@@ -908,8 +903,9 @@
         zoomControl: true
       }).setView([35.997, 139.397], 10);
 
-      L.maplibreGL({
-        style: "https://tiles.openfreemap.org/styles/liberty"
+      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", {
+        attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a>',
+        maxZoom: 18
       }).addTo(map);
     }
 
